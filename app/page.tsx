@@ -26,30 +26,106 @@ export default function DashboardPage() {
     const run = async () => {
       try {
         setLoading(true)
-        // Fetch waitlist
-        const waitRef = collection(db, "waitlist")
-        let waitSnap
-        try {
-          waitSnap = await getDocs(query(waitRef, orderBy("joinedAt", "desc")))
-        } catch {
-          waitSnap = await getDocs(waitRef)
+        
+        // Try multiple possible collection names (same as waiting list page)
+        const possibleCollections = ["waitlist", "users", "waitlistUsers", "waitinglist", "applications"]
+        
+        let allItems: Entry[] = []
+        
+        // Try each collection name until we find one with data
+        for (const collName of possibleCollections) {
+          try {
+            const collectionRef = collection(db, collName)
+            let querySnapshot
+            try {
+              querySnapshot = await getDocs(query(collectionRef, orderBy("joinedAt", "desc")))
+            } catch {
+              querySnapshot = await getDocs(collectionRef)
+            }
+            
+            if (querySnapshot.size > 0) {
+              querySnapshot.forEach((doc) => {
+                const data = doc.data()
+                
+                // Format the date if it's a Firestore timestamp
+                let joinedAt = data.joinedAt || data.createdAt || data.date
+                if (joinedAt) {
+                  if (joinedAt?.toDate) {
+                    joinedAt = joinedAt.toDate()
+                  } else if (joinedAt?.seconds) {
+                    joinedAt = new Date(joinedAt.seconds * 1000)
+                  }
+                }
+                
+                allItems.push({
+                  id: doc.id,
+                  name: data.name || data.fullName || data.firstName || "Unknown",
+                  email: data.email || "",
+                  company: data.company || data.companyName || data.organization || "",
+                  joinedAt: joinedAt,
+                  source: "waitlist",
+                })
+              })
+              
+              // If we found data in this collection, break and use it
+              if (allItems.length > 0) {
+                break
+              }
+            }
+          } catch (err) {
+            // Collection doesn't exist or error, continue to next
+          }
+        }
+        
+        // If we didn't find data, try waitlist with orderBy as fallback
+        if (allItems.length === 0) {
+          const waitlistRef = collection(db, "waitlist")
+          try {
+            const q = query(waitlistRef, orderBy("joinedAt", "desc"))
+            const querySnapshot = await getDocs(q)
+            querySnapshot.forEach((doc) => {
+              const data = doc.data()
+              let joinedAt = data.joinedAt || data.createdAt || data.date
+              if (joinedAt?.toDate) {
+                joinedAt = joinedAt.toDate()
+              } else if (joinedAt?.seconds) {
+                joinedAt = new Date(joinedAt.seconds * 1000)
+              }
+              
+              allItems.push({
+                id: doc.id,
+                name: data.name || data.fullName || data.firstName || "Unknown",
+                email: data.email || "",
+                company: data.company || data.companyName || data.organization || "",
+                joinedAt: joinedAt,
+                source: "waitlist",
+              })
+            })
+          } catch (orderError) {
+            const querySnapshot = await getDocs(waitlistRef)
+            querySnapshot.forEach((doc) => {
+              const data = doc.data()
+              let joinedAt = data.joinedAt || data.createdAt || data.date
+              if (joinedAt?.toDate) {
+                joinedAt = joinedAt.toDate()
+              } else if (joinedAt?.seconds) {
+                joinedAt = new Date(joinedAt.seconds * 1000)
+              }
+              
+              allItems.push({
+                id: doc.id,
+                name: data.name || data.fullName || data.firstName || "Unknown",
+                email: data.email || "",
+                company: data.company || data.companyName || data.organization || "",
+                joinedAt: joinedAt,
+                source: "waitlist",
+              })
+            })
+          }
         }
 
-        const waitItems: Entry[] = []
-        waitSnap.forEach((doc) => {
-          const d = doc.data() as any
-          waitItems.push({
-            id: doc.id,
-            name: d.name || "Unknown",
-            email: d.email || "",
-            company: d.company,
-            joinedAt: d.joinedAt,
-            source: "waitlist",
-          })
-        })
-
         // Do not include pitches in the dashboard (treat as 0)
-        setItems(waitItems)
+        setItems(allItems)
       } finally {
         setLoading(false)
       }
@@ -58,19 +134,22 @@ export default function DashboardPage() {
   }, [])
 
   const stats = useMemo(() => {
-    const total = items.length
+    // Total signups = all people on the waiting list (all items are from waitlist)
+    const waitTotal = items.length // All items are from waitlist
+    const total = waitTotal // Total signups should show all waiting list entries
+    
     const todayIso = new Date().toISOString().split("T")[0]
     const isToday = (val: any) => {
       if (!val) return false
       try {
         if (typeof val === "string") return val.startsWith(todayIso)
         if (val?.toDate) return val.toDate().toISOString().startsWith(todayIso)
+        if (val instanceof Date) return val.toISOString().startsWith(todayIso)
         if (val?.seconds) return new Date(val.seconds * 1000).toISOString().startsWith(todayIso)
       } catch {}
       return false
     }
     const today = items.filter((i) => isToday(i.joinedAt)).length
-    const waitTotal = items.filter((i) => i.source === "waitlist").length
     const pitchTotal = 0
     const gmail = items.filter((i) => i.email.toLowerCase().includes("@gmail.com")).length
     const outlook = items.filter((i) => i.email.toLowerCase().includes("@outlook.com") || i.email.toLowerCase().includes("@hotmail.com") || i.email.toLowerCase().includes("@live.com")).length
