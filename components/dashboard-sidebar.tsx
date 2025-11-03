@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/sidebar"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import Image from "next/image"
 
 const menuItems: Array<{
   title: string
@@ -65,8 +66,14 @@ export function DashboardSidebar({ ...props }: React.ComponentProps<typeof Sideb
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link href="/">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <LayoutDashboard className="size-4" />
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg overflow-hidden">
+                  <Image 
+                    src="/logo.png" 
+                    alt="PlayItLoud Logo" 
+                    width={32} 
+                    height={32} 
+                    className="object-contain"
+                  />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">Dashboard</span>

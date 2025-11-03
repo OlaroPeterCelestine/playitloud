@@ -15,8 +15,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Dashboard",
+  title: "PlayItLoud Dashboard",
   description: "Modern dashboard built with Next.js and shadcn/ui",
+  icons: {
+    icon: "/logo.png",
+  },
 };
 
 export default function RootLayout({

@@ -6,6 +6,7 @@ import { signIn } from "@/lib/auth"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import Image from "next/image"
 
 function LoginForm() {
   const router = useRouter()
@@ -44,8 +45,17 @@ function LoginForm() {
     <div className="min-h-svh flex items-center justify-center px-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Login</CardTitle>
-          <CardDescription>Access your dashboard</CardDescription>
+          <div className="flex items-center justify-center mb-4">
+            <Image 
+              src="/logo.png" 
+              alt="PlayItLoud Logo" 
+              width={120} 
+              height={120} 
+              className="object-contain"
+            />
+          </div>
+          <CardTitle className="text-center">Login</CardTitle>
+          <CardDescription className="text-center">Access your dashboard</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit} className="grid gap-4">
