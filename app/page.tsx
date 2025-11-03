@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Users } from "lucide-react"
 import { collection, getDocs, orderBy, query } from "firebase/firestore"
 import { db } from "@/lib/firebase"
-import { useAuth } from "@/components/auth-provider"
 
 type Entry = {
   id: string
@@ -18,7 +17,6 @@ type Entry = {
 }
 
 export default function DashboardPage() {
-  const { user } = useAuth()
   const [items, setItems] = useState<Entry[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -163,11 +161,6 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground hidden sm:block">Overview of your waiting list.</p>
-          {user && (
-            <div className="mt-2">
-              <p className="text-sm font-medium">Logged in as: <span className="text-primary">{user.email}</span></p>
-            </div>
-          )}
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
