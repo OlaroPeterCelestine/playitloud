@@ -7,11 +7,64 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar"
 import { Input } from "@/components/ui/input"
-import { Bell, Search } from "lucide-react"
+import { Bell, Search, Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/components/auth-provider"
 import { logOut } from "@/lib/auth"
 import { useRouter } from "next/navigation"
+import { useSidebar } from "@/components/ui/sidebar"
+
+function DashboardHeader() {
+  const { toggleSidebar, isMobile } = useSidebar()
+  const router = useRouter()
+  const { user } = useAuth()
+
+  return (
+    <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+      <div className="flex flex-1 items-center gap-2">
+        {/* Mobile Menu Button */}
+        {isMobile && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleSidebar}
+            className="md:hidden"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+        )}
+        
+        <Input
+          type="search"
+          placeholder="Search..."
+          className="max-w-sm hidden sm:flex"
+        />
+        
+        <div className="flex items-center gap-2 ml-auto">
+          <Button variant="outline" size="icon" className="hidden sm:flex">
+            <Search className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" size="icon" className="hidden sm:flex">
+            <Bell className="h-4 w-4" />
+          </Button>
+          {user && (
+            <Button
+              variant="outline"
+              onClick={async () => {
+                await logOut()
+                document.cookie = "fb_session=; Max-Age=0; path=/";
+                router.replace("/login")
+              }}
+              className="text-sm"
+            >
+              Sign out
+            </Button>
+          )}
+        </div>
+      </div>
+    </header>
+  )
+}
 
 export function DashboardLayout({
   children,
@@ -31,33 +84,7 @@ export function DashboardLayout({
     <SidebarProvider>
       <DashboardSidebar />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-          <div className="flex flex-1 gap-2">
-            <Input
-              type="search"
-              placeholder="Search..."
-              className="max-w-sm"
-            />
-            <Button variant="outline" size="icon" className="ml-auto">
-              <Search className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="icon">
-              <Bell className="h-4 w-4" />
-            </Button>
-            {user && (
-              <Button
-                variant="outline"
-                onClick={async () => {
-                  await logOut()
-                  document.cookie = "fb_session=; Max-Age=0; path=/";
-                  router.replace("/login")
-                }}
-              >
-                Sign out
-              </Button>
-            )}
-          </div>
-        </header>
+        <DashboardHeader />
         <div className="flex flex-1 flex-col gap-4 p-4">
           {children}
         </div>
