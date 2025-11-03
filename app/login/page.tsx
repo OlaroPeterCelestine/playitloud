@@ -1,14 +1,15 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, Suspense } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { signIn } from "@/lib/auth"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
@@ -19,11 +20,22 @@ export default function LoginPage() {
     try {
       setLoading(true)
       setError(null)
-      await signIn(email, password)
-      router.replace("/")
+      
+      // Sign in and immediately set session cookie
+      const userCredential = await signIn(email, password)
+      
+      // Set session cookie immediately for faster redirect
+      if (userCredential?.user) {
+        document.cookie = `fb_session=1; path=/; max-age=${7 * 24 * 60 * 60}`
+        
+        // Get redirect path if provided, otherwise go to dashboard
+        const redirect = searchParams.get("redirect") || "/"
+        
+        // Use window.location for instant redirect (no React router delay)
+        window.location.href = redirect
+      }
     } catch (err: any) {
       setError("Invalid credentials")
-    } finally {
       setLoading(false)
     }
   }
@@ -51,6 +63,22 @@ export default function LoginPage() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-svh flex items-center justify-center px-4">
+        <Card className="w-full max-w-sm">
+          <CardContent className="py-12">
+            <div className="text-center text-muted-foreground">Loading...</div>
+          </CardContent>
+        </Card>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   )
 }
 
