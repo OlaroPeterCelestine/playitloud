@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Bell, Search, Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/components/auth-provider"
-import { logOut } from "@/lib/auth"
+import { logOut, clearSession } from "@/lib/auth"
 import { useRouter } from "next/navigation"
 import { useSidebar } from "@/components/ui/sidebar"
 
@@ -52,7 +52,7 @@ function DashboardHeader() {
               variant="outline"
               onClick={async () => {
                 await logOut()
-                document.cookie = "fb_session=; Max-Age=0; path=/";
+                clearSession()
                 router.replace("/login")
               }}
               className="text-sm"

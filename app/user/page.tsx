@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { User, LogOut } from "lucide-react"
-import { logOut } from "@/lib/auth"
+import { logOut, clearSession } from "@/lib/auth"
 import { useRouter } from "next/navigation"
 
 export default function UserPage() {
@@ -15,7 +15,7 @@ export default function UserPage() {
 
   const handleLogout = async () => {
     await logOut()
-    document.cookie = "fb_session=; path=/; max-age=0"
+    clearSession()
     router.replace("/login")
   }
 

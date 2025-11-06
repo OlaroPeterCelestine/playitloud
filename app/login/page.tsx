@@ -2,7 +2,7 @@
 
 import { useState, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { signIn } from "@/lib/auth"
+import { signIn, createSession } from "@/lib/auth"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -22,12 +22,12 @@ function LoginForm() {
       setLoading(true)
       setError(null)
       
-      // Sign in and immediately set session cookie
+      // Sign in and create session
       const userCredential = await signIn(email, password)
       
-      // Set session cookie immediately for faster redirect
+      // Create proper session with Firebase ID token
       if (userCredential?.user) {
-        document.cookie = `fb_session=1; path=/; max-age=${7 * 24 * 60 * 60}`
+        await createSession(userCredential.user)
         
         // Get redirect path if provided, otherwise go to dashboard
         const redirect = searchParams.get("redirect") || "/"
