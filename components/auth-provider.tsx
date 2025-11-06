@@ -16,9 +16,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let refreshInterval: NodeJS.Timeout | null = null
+
     const unsub = subscribeToAuth(async (u) => {
       setUser(u)
       setLoading(false)
+
+      // Clear any existing refresh interval
+      if (refreshInterval) {
+        clearInterval(refreshInterval)
+        refreshInterval = null
+      }
 
       // Create or clear session when user state changes
       try {
@@ -29,17 +37,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             
             // Set up token refresh (Firebase tokens expire after 1 hour)
             // Refresh token every 50 minutes to keep session active
-            const refreshInterval = setInterval(async () => {
+            refreshInterval = setInterval(async () => {
               try {
                 await createSession(u)
               } catch (error) {
                 // If refresh fails, clear interval
-                clearInterval(refreshInterval)
+                if (refreshInterval) {
+                  clearInterval(refreshInterval)
+                  refreshInterval = null
+                }
               }
             }, 50 * 60 * 1000) // 50 minutes
-            
-            // Clean up interval on logout
-            return () => clearInterval(refreshInterval)
           } else {
             // Clear session when user logs out
             clearSession()
@@ -56,7 +64,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
     })
-    return () => unsub()
+
+    return () => {
+      unsub()
+      if (refreshInterval) {
+        clearInterval(refreshInterval)
+      }
+    }
   }, [])
 
   return (
