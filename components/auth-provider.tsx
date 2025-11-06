@@ -39,7 +39,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Refresh token every 50 minutes to keep session active
             refreshInterval = setInterval(async () => {
               try {
-                await createSession(u)
+                const currentUser = u
+                if (currentUser) {
+                  await createSession(currentUser)
+                }
               } catch (error) {
                 // If refresh fails, clear interval
                 if (refreshInterval) {
